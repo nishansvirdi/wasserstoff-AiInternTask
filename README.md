@@ -36,7 +36,7 @@ The **PDF Summary Pipeline** is a Node.js application designed to automate the p
 1. **Clone the repository**:
 
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/nishansvirdi/wasserstoff-AiInternTask.git
     cd pdf-summary-pipeline-internship
     ```
 
