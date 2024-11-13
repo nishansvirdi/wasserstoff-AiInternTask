@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Processing CLI</title>
+  <style>
+    /* Full screen dark background */
+    body, html {
+      height: 100%;
+      margin: 0;
+      background-color: #1e1e1e;
+      color: #00ff00;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    /* Terminal container */
+    .terminal {
+      width: 90%;
+      max-width: 800px;
+      background-color: #000;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+      padding: 20px;
+      overflow-y: auto;
+      height: 70vh;
+      margin-top: 10px;
+    }
+
+    /* CLI cursor animation */
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 18px;
+      background-color: #00ff00;
+      margin-left: 2px;
+      animation: blink 1s infinite;
+    }
+
+    /* Blinking cursor effect */
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* Smooth scrolling effect */
+    .terminal-output {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Secret Key Input Form */
+    .key-form {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      margin-bottom: 10px;
+    }
+
+    .key-form input, .key-form button {
+      padding: 8px;
+      margin: 5px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="key-form">
+    <label for="secretKey">Enter Secret Key to Start Processing:</label>
+    <input type="text" id="secretKey" placeholder="Enter your secret key" required>
+    <button onclick="startPipeline()">Start Pipeline</button>
+  </div>
+
+  <div class="terminal">
+    <div id="output" class="terminal-output">
+      <!-- Output will appear here -->
+    </div>
+    <div class="cursor"></div>
+  </div>
+
+  <script>
+    let source;
+
+    function startPipeline() {
+      // Close existing connection if any
+      if (source) source.close();
+
+      // Get the secret key from input
+      const key = document.getElementById('secretKey').value;
+      if (!key) {
+        alert('Please enter a secret key.');
+        return;
+      }
+
+      // Establish an SSE connection to /process with the entered secret key
+      source = new EventSource(`/process?key=${encodeURIComponent(key)}`);
+      const outputDiv = document.getElementById('output');
+      outputDiv.innerHTML = ''; // Clear previous output
+
+      // Handle incoming SSE messages and display them in the "terminal"
+      source.onmessage = (event) => {
+        const message = event.data;
+        const messageLine = document.createElement('div');
+        messageLine.textContent = message;
+        outputDiv.appendChild(messageLine);
+        outputDiv.scrollTop = outputDiv.scrollHeight; // Auto-scroll to bottom
+      };
+
+      // Handle SSE errors (e.g., server disconnection)
+      source.onerror = () => {
+        const errorMessage = document.createElement('div');
+        errorMessage.textContent = 'Connection lost. Please refresh to retry.';
+        errorMessage.style.color = '#ff0000';
+        outputDiv.appendChild(errorMessage);
+        source.close();
+      };
+    }
+  </script>
+</body>
+</html>
